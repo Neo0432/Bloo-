@@ -1,14 +1,7 @@
+'use client'
+
 import Image from "next/image";
 import "./AuthorizationPage.css";
-// import { useEffect, useState } from "react/cjs/react.production.min";
-import React, { useEffect, useState } from "react";
-
-const [document, set_document] = useState(null);
-useEffect(() => {
-  set_document(document);
-});
-const applicantForm = document.getElementById("loginForm");
-applicantForm.addEventListener("submit", handleFormSubmit);
 
 function serializeForm(formNode) {
   return new FormData(formNode);
@@ -21,10 +14,10 @@ async function sendData(data) {
   });
 }
 
-async function handleFormSubmit(event) {
+export async function handleFormSubmit(event) {
   event.preventDefault();
 
-  const data = serialise(event.target);
+  const data = serializeForm(event.target);
   const response = await sendData(data);
 }
 
@@ -52,13 +45,16 @@ export default function Authorization() {
             <form
               id="loginForm"
               action=""
+              onSubmit={handleFormSubmit}
               className="flex flex-col gap-4 w-[18.4rem]"
             >
               <section className="relative w-full">
                 <input
                   type="text"
-                  id="userNickname"
+                  id="userName"
+                  name="username"
                   placeholder=" "
+                  autoComplete="off"
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active formInput"
                 />
                 <label
@@ -72,7 +68,9 @@ export default function Authorization() {
                 <input
                   type="email"
                   id="userEmail"
+                  name="email"
                   placeholder=" "
+                  autoComplete='off'
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active formInput"
                 />
                 <label
@@ -86,7 +84,9 @@ export default function Authorization() {
                 <input
                   type="text"
                   id="userPass"
+                  name="password"
                   placeholder=" "
+                  autoComplete="off"
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active formInput"
                 />
                 <label
@@ -106,12 +106,13 @@ export default function Authorization() {
               </button>
             </form>
           </section>
-          <section className="flex w-fit h-full overflow-hidden rounded-[0.875rem]">
+          <section className="flex max-w-full h-full overflow-hidden rounded-[0.875rem] ">
             <Image
               src="/img/backgroundImage.jpg"
               alt="backgroundImage"
               width="824"
               height="692"
+              sizes="(max-width: 824px) 100vw, (max-width: 1200px) 66vw "
             ></Image>
           </section>
         </article>
