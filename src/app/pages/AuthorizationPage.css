@@ -1,0 +1,11 @@
+.formInput:focus + label,
+.formInput:not(:placeholder-shown) + label {
+  top: -0.4rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
+}
+
+.formInput,
+label {
+  transition: all 0.2s, border 0.3s;
+}
