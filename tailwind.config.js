@@ -11,6 +11,9 @@ module.exports = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      dropShadow: {
+        "link-shadow": "0 4px 6px rgba(229, 143, 127, 0.1)",
+      },
     },
     colors: {
       "second-orange": "#D97462",

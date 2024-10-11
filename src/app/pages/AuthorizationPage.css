@@ -6,6 +6,7 @@
 }
 
 .formInput,
-label {
-  transition: all 0.2s, border 0.3s;
+label,
+a {
+  transition: all 0.2s, border 0.3s, color 0.5s;
 }
