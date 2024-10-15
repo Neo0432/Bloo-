@@ -2,20 +2,19 @@
 
 import Image from "next/image";
 import "./AuthorizationPage.css";
-
 function serializeForm(formNode) {
   return new FormData(formNode);
 }
 
 async function sendData(data) {
   const dataJson = JSON.stringify({
-    username: "Neo",
+    username: data.get("username"),
     password: data.get("password"),
     email: data.get("email"),
   });
   try {
     console.log(data);
-    return await fetch("http://localhost:5137/login", {
+    return await fetch("http://localhost:5137/login/new-account", {
       method: "POST",
       headers: {
         "Content-Type": "application/json", // Указываем JSON
@@ -32,7 +31,7 @@ export async function handleFormSubmit(event) {
 
   const data = serializeForm(event.target);
   const response = await sendData(data);
-  console.log("Response" + response);
+  console.log("Response" + response.body.locked);
 }
 
 export default function Authorization() {
