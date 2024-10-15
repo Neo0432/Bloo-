@@ -3,8 +3,8 @@ import express, { Express, Request, Response } from "express";
 import User from "./User";
 import { connectToDb, getDb } from "./db";
 import { Db, MongoDBCollectionNamespace } from "mongodb";
-import bodyParser from "body-parser";
 import cors from "cors";
+import passEnc from "./func/hashingPassword";
 
 const app = express();
 const port = 5137;
@@ -48,18 +48,31 @@ app.post("/users", (req: Request, res: Response) => {
 
 app.use(express.json()); // For parsing JSON
 
-app.post("/login", async (req: Request, res: Response) => {
+app.post("/login/new-account", async (req: Request, res: Response) => {
   if (req.body) {
     console.log(req.body);
+    const password: String = req.body.password;
+
     const user: User = {
       username: req.body.username,
-      password: req.body.password,
+      hashedPassword: await passEnc(req.body.password), //create password hash
       email: req.body.email,
     };
-    const userData = await db
+    console.log(user.hashedPassword);
+
+    const isUserExists = (await db
       .collection("users")
-      .findOne({ username: user.username, password: user.password });
-    if (userData) res.status(200).send(userData);
-    else res.status(401).send("User not found");
+      .findOne({ username: user.username }))
+      ? true
+      : false; //checking if user with this data exists
+
+    if (!isUserExists) {
+      try {
+        await db.collection("users").insertOne(user); //pushing data into database
+        res.status(201).send("[post] User created");
+      } catch (e) {
+        console.log(`[error] Can't push userdata to database: ${e}`);
+      }
+    } else res.status(409).send("User already exists");
   } else res.status(400).send({ error: "The request has no body" });
 });

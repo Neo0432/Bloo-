@@ -3,7 +3,7 @@
 export default interface User {
   id?: number;
   username: string;
-  password: string;
+  hashedPassword: string;
   email: string;
 
   // constructor(id: number, username: string, password: string, email: string) {

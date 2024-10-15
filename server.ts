@@ -7,7 +7,7 @@ import { connectToDb, getDb } from "./db";
 const app = express();
 const port = 5173;
 
-const user: User = new User(1, "Jack", "12345678", "Jack@gmail.com");
+// const user: User = new User(1, "Jack", "12345678", "Jack@gmail.com");
 
 // app.get("/chat", (req: Request, res: Response) => {
 //   console.log("Connection 1: " + req.headers.connection);
@@ -22,7 +22,7 @@ const server = app.listen(port, () => {
     console.log("[open] Connection open");
     console.log("Connection url: " + socket.url);
     console.log("Sending data to server");
-    socket.send([{ user }]);
+    // socket.send([{ user }]);
   };
   socket.onmessage = function (e) {
     console.log(`[message] Geting data from server: ${e.data}`);
