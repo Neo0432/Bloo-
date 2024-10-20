@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import "./AuthorizationPage.css";
+import { useEffect, useState } from "react";
+import IsValidData from "../components/isValidData";
+
 function serializeForm(formNode) {
   return new FormData(formNode);
 }
-
-async function sendData(data) {
+async function createNewAccountFetch(data) {
   const dataJson = JSON.stringify({
     username: data.get("username"),
     password: data.get("password"),
@@ -14,27 +16,143 @@ async function sendData(data) {
   });
   try {
     console.log(data);
-    return await fetch("http://localhost:5137/login/new-account", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json", // Указываем JSON
-      },
-      body: dataJson,
-    });
+    return await fetch(
+      "http://localhost:5137/login/new-account/create-account",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: dataJson,
+      }
+    );
   } catch (e) {
     console.log(e);
   }
 }
 
-export async function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
   event.preventDefault();
-
-  const data = serializeForm(event.target);
-  const response = await sendData(data);
-  console.log("Response" + response.body.locked);
+  const serializedFormData = serializeForm(event.target);
+  const response = await createNewAccountFetch(serializedFormData);
+  const data = await response.json();
+  console.log(data);
 }
 
+async function checkForUsernameEmpty(username) {
+  const data = JSON.stringify({
+    username: username,
+  });
+  console.log(data);
+
+  try {
+    return await fetch(
+      "http://localhost:5137/login/new-account/is-username-empty",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: data,
+      }
+    );
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+// function IsMailValid(mailAdress) {
+//   useEffect(() => {
+//     setIsMailValid(EMAIL_REGEXP.test(isMailValid));
+//   }, [isMailValid]);
+
+//   return isMailValid;
+// }
+
 export default function Authorization() {
+  const [nickname, setNickname] = useState("");
+  const [debouncedNickname, setDebouncedNickname] = useState("");
+  const [isUsernameEmpty, setIsUsernameEmpty] = useState(false);
+
+  const handleChange = (event) => {
+    setNickname(event.target.value);
+  };
+
+  useEffect(() => {
+    const timeId = setTimeout(() => {
+      setDebouncedNickname(nickname);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeId);
+    };
+  }, [nickname]);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (debouncedNickname) {
+        console.log(`Отправка запроса для ${debouncedNickname}`);
+        const response = await checkForUsernameEmpty(debouncedNickname);
+        const data = await response.json();
+        if (data) setIsUsernameEmpty(data.data.isUsernameEmpty);
+        // console.log(data.data.isUsernameEmpty);
+      } else setIsUsernameEmpty(false);
+    }
+    fetchData();
+  }, [debouncedNickname]);
+
+  const [mail, setMail] = useState("");
+  const [debouncedMail, setDebouncedMail] = useState("");
+  const [isMailValid, setIsMailValid] = useState(false);
+
+  const handleChangeMail = (event) => {
+    setMail(event.target.value);
+  };
+
+  useEffect(() => {
+    const timeId = setTimeout(() => {
+      setDebouncedMail(mail);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeId);
+    };
+  }, [mail]);
+
+  useEffect(() => {
+    const EMAIL_REGEXP =
+      /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
+    if (debouncedMail) {
+      setIsMailValid(EMAIL_REGEXP.test(debouncedMail));
+    } else setIsMailValid(false);
+  }, [debouncedMail]);
+
+  const [password, setPassword] = useState("");
+  const [debouncedPassword, setDebouncedPassword] = useState("");
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+
+  const handleChangePassword = (event) => {
+    setPassword(event.target.value);
+  };
+
+  useEffect(() => {
+    const timeId = setTimeout(() => {
+      setDebouncedPassword(password);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeId);
+    };
+  }, [password]);
+
+  useEffect(() => {
+    const PASSWORD_REGEXP =
+      /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+    if (debouncedPassword)
+      setIsPasswordValid(PASSWORD_REGEXP.test(debouncedPassword));
+    else setIsPasswordValid(false);
+  }, [debouncedPassword]);
+
   return (
     <>
       <main className="font-regular h-screen px-6 py-6 bg-background-gray">
@@ -70,6 +188,8 @@ export default function Authorization() {
                   name="username"
                   placeholder=" "
                   autoComplete="off"
+                  value={nickname}
+                  onChange={handleChange}
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active focus:drop-shadow-link-shadow formInput"
                 />
                 <label
@@ -78,6 +198,7 @@ export default function Authorization() {
                 >
                   Nickname
                 </label>
+                <IsValidData isValid={isUsernameEmpty} />
               </section>
               <section className="relative">
                 <input
@@ -86,6 +207,8 @@ export default function Authorization() {
                   name="email"
                   placeholder=" "
                   autoComplete="off"
+                  value={mail}
+                  onChange={handleChangeMail}
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active focus:drop-shadow-link-shadow formInput"
                 />
                 <label
@@ -94,6 +217,7 @@ export default function Authorization() {
                 >
                   E-mail
                 </label>
+                <IsValidData isValid={isMailValid} />
               </section>
               <section className="relative">
                 <input
@@ -102,6 +226,8 @@ export default function Authorization() {
                   name="password"
                   placeholder=" "
                   autoComplete="off"
+                  value={password}
+                  onChange={handleChangePassword}
                   className="flex w-full h-12 px-4 border-second-orange border-[3px] rounded-xl bg-transparent outline-none focus:border-second-orange-active focus:drop-shadow-link-shadow formInput"
                 />
                 <label
@@ -110,11 +236,13 @@ export default function Authorization() {
                 >
                   Password
                 </label>
+                <IsValidData isValid={isPasswordValid} />
               </section>
 
               <button
                 type="submit"
                 id="formSubmit"
+                disabled={!(isUsernameEmpty && isMailValid && isPasswordValid)}
                 className="w-44 h-12 mt-2 bg-second-orange rounded-xl font-semibold hover:bg-second-orange-active hover:drop-shadow-link-shadow hover:scale-105 active:bg-second-orange active:scale-100 transition-all duration-300"
               >
                 Create account
