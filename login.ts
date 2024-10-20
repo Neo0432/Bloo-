@@ -1,10 +1,11 @@
 "use strict";
-import express, { Express, Request, Response } from "express";
+import express, { Express, json, Request, Response } from "express";
 import User from "./User";
 import { connectToDb, getDb } from "./db";
 import { Db, MongoDBCollectionNamespace } from "mongodb";
 import cors from "cors";
 import passEnc from "./func/hashingPassword";
+import { responseFormat } from "./resJsonFormatMiddleware";
 
 const app = express();
 const port = 5137;
@@ -18,11 +19,12 @@ app.use(
   })
 );
 
+app.use(express.json()); // For parsing JSON
+// app.use(responseFormat as any);
 //connect to DB
 const startServer = async () => {
   try {
     await connectToDb();
-
     app.listen(port, () => {
       console.log(`Listening port ${port}`);
     });
@@ -46,33 +48,63 @@ app.post("/users", (req: Request, res: Response) => {
     });
 });
 
-app.use(express.json()); // For parsing JSON
+app.post(
+  "/login/new-account/create-account",
+  async (req: Request, res: Response) => {
+    if (req.body) {
+      console.log(req.body);
+      const user: User = {
+        username: req.body.username,
+        hashedPassword: await passEnc(req.body.password), //create password hash
+        email: req.body.email,
+      };
 
-app.post("/login/new-account", async (req: Request, res: Response) => {
-  if (req.body) {
-    console.log(req.body);
-    const password: String = req.body.password;
+      const isUserExists = (await db
+        .collection("users")
+        .findOne({ username: user.username }))
+        ? true
+        : false; //checking if user with this data exists
 
-    const user: User = {
-      username: req.body.username,
-      hashedPassword: await passEnc(req.body.password), //create password hash
-      email: req.body.email,
-    };
-    console.log(user.hashedPassword);
-
-    const isUserExists = (await db
-      .collection("users")
-      .findOne({ username: user.username }))
-      ? true
-      : false; //checking if user with this data exists
-
-    if (!isUserExists) {
-      try {
-        await db.collection("users").insertOne(user); //pushing data into database
-        res.status(201).send("[post] User created");
-      } catch (e) {
-        console.log(`[error] Can't push userdata to database: ${e}`);
+      if (!isUserExists) {
+        try {
+          await db.collection("users").insertOne(user); //pushing data into database
+          res.statusMessage = "[post] User created";
+          res.status(201).send({ message: "User created" });
+        } catch (e) {
+          console.log(`[error] Can't push userdata to database: ${e}`);
+        }
+      } else {
+        res.statusMessage = "[error] User already exists";
+        res.status(409).send({ message: "User already exists" });
       }
-    } else res.status(409).send("User already exists");
-  } else res.status(400).send({ error: "The request has no body" });
-});
+    } else {
+      res.statusMessage = "[error] The request has no body";
+      res.status(400).send({ message: "The request has no body" });
+    }
+  }
+);
+
+app.post(
+  "/login/new-account/is-username-empty",
+  async (req: Request, res: Response) => {
+    const username: String = req.body.username;
+    let isUsernameEmpty: Boolean = true;
+    if (username) {
+      try {
+        isUsernameEmpty = (await db
+          .collection("users")
+          .findOne({ username: username }))
+          ? false
+          : true;
+        console.log(username);
+      } catch (e) {
+        console.log(`[error] Can't check username for empty: ${e}`);
+        return;
+      }
+    }
+    const data = { isUsernameEmpty: isUsernameEmpty };
+    console.log(data);
+    // res.body.data = jsonformat;
+    res.status(200).send({ data });
+  }
+);

@@ -9,22 +9,11 @@ const connectToDb = async (): Promise<void> => {
       (client) => {
         dbConnection = client.db();
         console.log("connectiong success");
-        // let arr: any[] = [];
-        // dbConnection
-        //   .collection("users")
-        //   .find()
-        //   .sort({ username: 1 })
-        //   .toArray()
-        //   .then((users) => {
-        //     arr = users;
-        //     console.log(arr);
-        //   });
       }
     );
   } catch (err) {
     console.error("Ошибка при подключении к базе данных" + err);
     throw err;
-    //console.log("TypeOf dbConnection is " + typeof dbConnection);
   }
 };
 
